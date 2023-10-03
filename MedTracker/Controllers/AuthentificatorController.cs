@@ -15,8 +15,8 @@ namespace MedTracker.Controllers
             _authentificatorService = authentificatorService;
         }
 
-        [HttpPost("register")]
-        public IActionResult Register([FromBody] RegisterRequestDto requestDto)
+        [HttpPost("register/doctor")]
+        public IActionResult Register([FromBody] DoctorRegisterRequestDto requestDto)
         {
             var registrationResult = _authentificatorService.RegisterUser(requestDto);
 
@@ -27,6 +27,19 @@ namespace MedTracker.Controllers
             else
             {
                 return BadRequest(new { Message = registrationResult.Message });
+            }
+        }
+        [HttpPost("register/patient")]
+        public IActionResult Register([FromBody] PatientRegisterRequestDto requestDto)
+        {
+            var registationResult = _authentificatorService.RegisterUser(requestDto);
+            if (registationResult.Success)
+            {
+                return Ok(new {Message = registationResult.Message});
+            }
+            else
+            {
+                return BadRequest(new {Message = registationResult.Message});
             }
         }
 
