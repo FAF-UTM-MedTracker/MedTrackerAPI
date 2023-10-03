@@ -17,7 +17,7 @@ namespace MedTracker.Services
             _configuration = configuration;
         }
 
-        public RegistrationResultDto RegisterUser(RegisterRequestDto requestDto)
+        public RegistrationResultDto RegisterUser(DoctorRegisterRequestDto requestDto)
         {
             try
             {
@@ -32,14 +32,73 @@ namespace MedTracker.Services
                 }
 
                 // Create a new user entity and save it to the database
-                var user = new Users
+                var user = new User
                 {
                     Email = requestDto.Email,
                     UPassword = requestDto.UPassword, // Note: You should hash and salt the password before storing it
-                    Doctor = requestDto.Doctor // Assuming your DTO has a Doctor property
+                    IsDoctor = requestDto.IsDoctor // Assuming your DTO has a Doctor property
+                };
+                var doctor = new Doctor
+                {
+                    FirstName = requestDto.FirstName,
+                    LastName = requestDto.LastName,
+                    PhoneNumber = requestDto.PhoneNumber,
+                    User = user
+                };
+                
+                _dbContext.Users.Add(user);
+                _dbContext.Doctors.Add(doctor);
+                _dbContext.SaveChanges();
+
+                return new RegistrationResultDto
+                {
+                    Success = true,
+                    Message = "Registration successful"
+                };
+            }
+            catch (Exception ex)
+            {
+                // Log the error
+                Console.WriteLine($"An error occurred during registration: {ex.Message}");
+
+                return new RegistrationResultDto
+                {
+                    Success = false,
+                    Message = "An error occurred during registration."
+                };
+            }
+        }
+        public RegistrationResultDto RegisterUser(PatientRegisterRequestDto requestDto)
+        {
+            try
+            {
+                // Check if the email is already taken
+                if (IsEmailTaken(requestDto.Email))
+                {
+                    return new RegistrationResultDto
+                    {
+                        Success = false,
+                        Message = "Email address is already in use."
+                    };
+                }
+
+                // Create a new user entity and save it to the database
+                var user = new User
+                {
+                    Email = requestDto.Email,
+                    UPassword = requestDto.UPassword, // Note: You should hash and salt the password before storing it
+                };
+                var patient = new Patient
+                {
+                    FirstName = requestDto.FirstName,
+                    LastName = requestDto.LastName,
+                    PhoneNumber = requestDto.PhoneNumber,
+                    DateofBirth = requestDto.DateofBirth,
+                    User = user
                 };
 
                 _dbContext.Users.Add(user);
+                _dbContext.Patients.Add(patient);
                 _dbContext.SaveChanges();
 
                 return new RegistrationResultDto
@@ -114,5 +173,6 @@ namespace MedTracker.Services
         {
             return _dbContext.Users.Any(u => u.Email == email);
         }
+
     }
 }
