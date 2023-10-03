@@ -3,16 +3,16 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MedTracker.Models
 {
-    [Table("Patient")]
-    public class Patient
+    public class Patient_Treatment
     {
         [ForeignKey("User")]
+        [Required]
         public int IdUser { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string PhoneNumber { get; set; }
-        public DateTime DateofBirth { get; set; }
         public User User { get; set; }
-
+        
+        [ForeignKey("Treatment")]
+        [Required]
+        public int IdTreatment { get; }
+        public Treatment Treatment { get; set;}
     }
 }

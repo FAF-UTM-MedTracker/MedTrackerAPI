@@ -9,35 +9,93 @@ namespace MedTracker
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
-
-        // Define DbSet properties for your entities here
         public DbSet<User> Users { get; set; }
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<Patient> Patients { get; set; }
-
-        // Override OnModelCreating to configure your database model
+        public DbSet<Treatment> Treatments { get; set; }
+        public DbSet<Patient_Treatment> Patient_Treatments { get; set; }
+        public DbSet<Medication> Medications { get; set; }
+        public DbSet<Treatment_Medication> Treatment_Medications { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Call the base OnModelCreating method
             base.OnModelCreating(modelBuilder);
 
-            // Configure your entity relationships and constraints here
-            modelBuilder.Entity<User>().HasKey(u => u.IdUser);
-            modelBuilder.Entity<Doctor>()
+            // User
+            modelBuilder.Entity<User>()
                 .HasKey(u => u.IdUser);
-            modelBuilder.Entity<Doctor>()
-                .HasOne(d => d.User)
-                .WithOne(u => u.Doctor)
-                .HasForeignKey<Doctor>(d=>d.IdUser);
             
+            // Patient
             modelBuilder.Entity<Patient>()
-                .HasKey(u => u.IdUser);
+                .HasKey(p => p.IdUser);
+
             modelBuilder.Entity<Patient>()
                 .HasOne(p => p.User)
-                .WithOne(u => u.Patient)
-                .HasForeignKey<Patient>(d => d.IdUser);
+                .WithMany(p => p.Patients)
+                .HasForeignKey(p => p.IdUser);
 
+            // Doctor
+            modelBuilder.Entity<Doctor>()
+                .HasKey(d => d.IdUser);
 
+            modelBuilder.Entity<Doctor>()
+                .HasOne(d => d.User)
+                .WithMany(d => d.Doctors)
+                .HasForeignKey(d => d.IdUser);
+
+            // Treatment
+            modelBuilder.Entity<Treatment>()
+                .HasKey(t => t.IdTreatment);
+
+            // corect
+            modelBuilder.Entity<Treatment>()
+                .HasOne(user => user.User)
+                .WithMany(t => t.Treatments)
+                .HasForeignKey(u => u.IdUserD);
+
+            // Pacient_Treatment For User
+            modelBuilder.Entity<Patient_Treatment>()
+                .HasKey(pt => pt.IdTreatment);
+            //modelBuilder.Entity<Patient_Treatment>()
+            //    .HasKey(pt => new{ pt.IdUser,pt.IdTreatment});
+
+            // gata
+            modelBuilder.Entity<Patient_Treatment>()
+                .HasOne(pt => pt.User)
+                .WithMany(u => u.Patient_Treatments)
+                .HasForeignKey(pt => pt.IdUser);
+
+            // Pacient_Treatment For treatment
+            //modelBuilder.Entity<Patient_Treatment>()
+            //  .HasKey(pt => pt.IdTreatment);
+
+            // gata
+            modelBuilder.Entity<Patient_Treatment>()
+                .HasOne(pt => pt.Treatment)
+                .WithMany(tr => tr.Patient_Treatments)
+                .HasForeignKey(pt => pt.IdTreatment);
+
+            // Medication
+            //modelBuilder.Entity<Medication>()
+            //    .HasKey(m => m.IdMedication);
+
+            // Treatment_Medication for Treatment
+            modelBuilder.Entity<Treatment_Medication>()
+                .HasKey(tm => tm.IdTreatment);
+
+            modelBuilder.Entity<Treatment_Medication>()
+                .HasOne(tm => tm.Treatment)
+                .WithMany(treatment => treatment.Treatment_Medications)
+                .HasForeignKey(tm => tm.IdTreatment);
+
+            // Treatment_Medication for Medication
+            modelBuilder.Entity<Treatment_Medication>()
+                .HasKey(tm => tm.IdMedication);
+
+            modelBuilder.Entity<Treatment_Medication>()
+                .HasOne(tm => tm.Medication)
+                .WithMany(med => med.Treatment_Medications)
+                .HasForeignKey(tm => tm.IdMedication);
         }
     }
 }
