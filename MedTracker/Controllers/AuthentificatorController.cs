@@ -1,11 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
 using MedTracker.DTOs;
 using MedTracker.Services;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
 
 namespace MedTracker.Controllers
 {
     [ApiController]
     [Route("auth")]
+    //[Authorize]
     public class AuthenticatorController : ControllerBase
     {
         private readonly AuthentificatorService _authentificatorService;
@@ -47,14 +53,13 @@ namespace MedTracker.Controllers
         public IActionResult Login([FromBody] LoginRequestDto requestDto)
         {
             var loginResult = _authentificatorService.LoginUser(requestDto);
-
-            if (loginResult.Success)
+            if (loginResult == null)
             {
-                return Ok(new { Message = loginResult.Message });
+                return BadRequest(new { Message = "Authentication error." });
             }
             else
             {
-                return BadRequest(new { Message = loginResult.Message });
+                return Ok(new { Message = "Authententication succedeed.", Jwt = loginResult });
             }
         }
     }

@@ -13,9 +13,10 @@ namespace MedTracker
         public DbSet<Doctor> Doctors { get; set; }
         public DbSet<Patient> Patients { get; set; }
         public DbSet<Treatment> Treatments { get; set; }
-        public DbSet<Patient_Treatment> Patient_Treatments { get; set; }
+        public DbSet<Patient_Treatment> Patient_Treatment { get; set; }
         public DbSet<Medication> Medications { get; set; }
-        public DbSet<Treatment_Medication> Treatment_Medications { get; set; }
+        public DbSet<Treatment_Medication> Treatment_Medication { get; set; }
+        //public DbSet<NotesP> NotesPs { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // Call the base OnModelCreating method
@@ -24,34 +25,39 @@ namespace MedTracker
             // User
             modelBuilder.Entity<User>()
                 .HasKey(u => u.IdUser);
-            
-            // Patient
-            modelBuilder.Entity<Patient>()
-                .HasKey(p => p.IdUser);
 
-            modelBuilder.Entity<Patient>()
-                .HasOne(p => p.User)
-                .WithMany(p => p.Patients)
-                .HasForeignKey(p => p.IdUser);
+            // Configure your entity relationships and constraints here
+            modelBuilder.Entity<User>().HasKey(u => u.IdUser);
+            modelBuilder.Entity<User>()
+                .HasMany(t => t.Treatments);
 
-            // Doctor
             modelBuilder.Entity<Doctor>()
-                .HasKey(d => d.IdUser);
-
+                .HasKey(u => u.IdUser);
             modelBuilder.Entity<Doctor>()
                 .HasOne(d => d.User)
-                .WithMany(d => d.Doctors)
-                .HasForeignKey(d => d.IdUser);
+                .WithOne(u => u.Doctor)
+                .HasForeignKey<Doctor>(d => d.IdUser);
+
+            modelBuilder.Entity<Patient>()
+                .HasKey(u => u.IdUser);
+            modelBuilder.Entity<Patient>()
+                .HasOne(p => p.User)
+                .WithOne(u => u.Patient)
+                .HasForeignKey<Patient>(d => d.IdUser);
 
             // Treatment
             modelBuilder.Entity<Treatment>()
                 .HasKey(t => t.IdTreatment);
-
+            modelBuilder.Entity<Treatment>()
+            .Property(t => t.TName);
+            modelBuilder.Entity<Treatment>()
+            .Property(t => t.Note);
             // corect
             modelBuilder.Entity<Treatment>()
-                .HasOne(user => user.User)
+                .HasOne(user => user.Doctor)
                 .WithMany(t => t.Treatments)
-                .HasForeignKey(u => u.IdUserD);
+                .HasForeignKey(u => u.DoctorID)
+                .IsRequired();
 
             // Pacient_Treatment For User
             modelBuilder.Entity<Patient_Treatment>()
@@ -61,8 +67,8 @@ namespace MedTracker
 
             // gata
             modelBuilder.Entity<Patient_Treatment>()
-                .HasOne(pt => pt.User)
-                .WithMany(u => u.Patient_Treatments)
+                .HasOne(pt => pt.Patient)
+                .WithMany(u => u.Patient_Treatment)
                 .HasForeignKey(pt => pt.IdUser);
 
             // Pacient_Treatment For treatment
@@ -72,7 +78,7 @@ namespace MedTracker
             // gata
             modelBuilder.Entity<Patient_Treatment>()
                 .HasOne(pt => pt.Treatment)
-                .WithMany(tr => tr.Patient_Treatments)
+                .WithMany(tr => tr.Patient_Treatment)
                 .HasForeignKey(pt => pt.IdTreatment);
 
             // Medication

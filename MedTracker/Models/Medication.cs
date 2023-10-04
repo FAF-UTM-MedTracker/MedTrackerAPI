@@ -9,12 +9,12 @@ namespace MedTracker.Models
         [Key]
         public int IdMedication { get; set; }
         public string PName { get; set; }
-        public string Description { get; set; }
-        public DateTime Start {  get; set; }
-        public DateTime End { get; set; }
+        public string MDescription { get; set; }
+        public DateTime Start_Time {  get; set; }
+        public DateTime End_Time { get; set; }
         public DateTime TimeUse { get; set; }
-        public float Quantity { get; set; }
+        public double Quantity { get; set; }
 
-        public List<Treatment_Medication> Treatment_Medications { get; set; }
+        public ICollection<Treatment_Medication> Treatment_Medications { get; set; }
     }
 }
