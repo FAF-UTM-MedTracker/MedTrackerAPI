@@ -8,11 +8,11 @@ namespace MedTracker.Models
         [ForeignKey("User")]
         [Required]
         public int IdUser { get; set; }
-        public User User { get; set; }
+        public User Patient { get; set; }
         
         [ForeignKey("Treatment")]
         [Required]
-        public int IdTreatment { get; }
+        public int IdTreatment { get; set; }
         public Treatment Treatment { get; set;}
     }
 }

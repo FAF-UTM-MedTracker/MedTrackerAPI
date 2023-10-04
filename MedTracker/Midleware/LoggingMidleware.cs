@@ -1,4 +1,9 @@
-﻿namespace MedTracker.Midleware
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using System.Security.Claims;
+using System.Threading.Tasks;
+
+namespace MedTracker.Midleware
 {
     public class LoggingMiddleware
     {

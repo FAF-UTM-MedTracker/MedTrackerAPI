@@ -1,8 +1,12 @@
 ﻿using MedTracker.DTOs;
 using MedTracker.Models;
 using Microsoft.Extensions.Configuration;
+using Microsoft.IdentityModel.Tokens;
 using System;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Security.Claims;
+using System.Text;
 
 namespace MedTracker.Services
 {
@@ -10,6 +14,9 @@ namespace MedTracker.Services
     {
         private readonly ApplicationDbContext _dbContext;
         private readonly IConfiguration _configuration;
+
+        private const string TokenSecret = "ThePillTrackerSecretKeyIsThisOneRightHere";
+        private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(8);
 
         public AuthentificatorService(ApplicationDbContext dbContext, IConfiguration configuration)
         {
@@ -83,17 +90,19 @@ namespace MedTracker.Services
                 }
 
                 // Create a new user entity and save it to the database
+                //var hashedPassword = BCrypt.Net.BCrypt.HashPassword(requestDto.UPassword);
+                var hashedPassword = requestDto.UPassword;
                 var user = new User
                 {
                     Email = requestDto.Email,
-                    UPassword = requestDto.UPassword, // Note: You should hash and salt the password before storing it
+                    UPassword = hashedPassword,
                 };
                 var patient = new Patient
                 {
                     FirstName = requestDto.FirstName,
                     LastName = requestDto.LastName,
                     PhoneNumber = requestDto.PhoneNumber,
-                    DateofBirth = requestDto.DateofBirth,
+                    Dateofbirth = requestDto.Dateofbirth,
                     User = user
                 };
 
@@ -120,55 +129,53 @@ namespace MedTracker.Services
             }
         }
 
-        public LoginResultDto LoginUser(LoginRequestDto requestDto)
+        public string? LoginUser(LoginRequestDto requestDto)
         {
             try
             {
                 // Find the user by email
-                var user = _dbContext.Users.FirstOrDefault(u => u.Email == requestDto.Email);
+                var user = _dbContext.Users.First(u => u.Email == requestDto.Email);
 
                 if (user == null)
-                {
-                    return new LoginResultDto
-                    {
-                        Success = false,
-                        Message = "User not found."
-                    };
-                }
+                    return null;
 
-                // Check the password (You should implement password hashing and verification logic here)
-                if (user.UPassword == requestDto.UPassword)
-                {
-                    return new LoginResultDto
-                    {
-                        Success = true,
-                        Message = "Login successful"
-                        // You can include additional user information here if needed
-                        // User = user
-                    };
-                }
+                //var hashedPassword = BCrypt.Net.BCrypt.HashPassword(requestDto.UPassword);
+                var hashedPassword = requestDto.UPassword;
+                if (user.UPassword == hashedPassword)
+                    return GenerateJwt(user.IdUser);
                 else
-                {
-                    return new LoginResultDto
-                    {
-                        Success = false,
-                        Message = "Incorrect password."
-                    };
-                }
+                    return null;
             }
             catch (Exception ex)
             {
                 // Log the error
                 Console.WriteLine($"An error occurred during login: {ex.Message}");
-
-                return new LoginResultDto
-                {
-                    Success = false,
-                    Message = "An error occurred during login."
-                };
+                return null;
             }
         }
 
+        static string GenerateJwt(int userId)
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var key = Encoding.UTF8.GetBytes(TokenSecret);
+
+            var claims = new List<Claim>
+            {
+                new ("userId", userId.ToString())
+            };
+
+            var tokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = new ClaimsIdentity(claims),
+                Expires = DateTime.UtcNow.Add(TokenLifetime),
+                Issuer = "https://pillTracker.com/",
+                Audience = "https://medtrackerapi.azurewebsites.net",
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256)
+            };
+
+            var token = tokenHandler.CreateToken(tokenDescriptor);
+            return tokenHandler.WriteToken(token);
+        }
         private bool IsEmailTaken(string email)
         {
             return _dbContext.Users.Any(u => u.Email == email);

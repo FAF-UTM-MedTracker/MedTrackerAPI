@@ -18,7 +18,7 @@ namespace MedTracker.DTOs
         public string PhoneNumber { get; set;}
 
         [Required(ErrorMessage = "Birth Date is required")]
-        public DateTime DateofBirth { get; set;}
+        public DateTime Dateofbirth { get; set;}
 
     }
 }
