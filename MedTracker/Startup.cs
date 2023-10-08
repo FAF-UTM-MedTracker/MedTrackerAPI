@@ -1,11 +1,10 @@
 using MedTracker.Midleware;
+using MedTracker.Models;
 using MedTracker.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
 
 namespace MedTracker
@@ -38,6 +37,8 @@ namespace MedTracker
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "MedTracker API", Version = "v1" });
             });
 
+            
+            //services.AddControllersWithViews();
             // Other services configuration...
         }
 
