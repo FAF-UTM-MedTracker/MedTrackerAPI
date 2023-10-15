@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MedTracker.Models
 {
-    public class NotesP
+    public class Note
     {
         [Key]
         [Required]

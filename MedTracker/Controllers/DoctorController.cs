@@ -6,6 +6,7 @@ using MedTracker.Models;
 using MedTracker;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using MedTracker.DTOs;
 
 [Route("[controller]")]
 [ApiController]
@@ -49,9 +50,10 @@ public class DoctorController : ControllerBase
                {
                    t.IdTreatment,
                    t.TName,
+                   t.StatusTreatment,
                    t.Start_Time,
                    t.End_Time,
-                   t.Note,
+                   t.NotePatient,
                    t.DoctorID,
                })
                .ToListAsync();
@@ -90,9 +92,10 @@ public class DoctorController : ControllerBase
                 {
                     t.IdTreatment,
                     t.TName,
+                    t.StatusTreatment,
                     t.Start_Time,
                     t.End_Time,
-                    t.Note,
+                    t.NotePatient,
                     t.DoctorID,
                     Medications = meds.ToList()
                 })
@@ -104,5 +107,49 @@ public class DoctorController : ControllerBase
         {
             return StatusCode(500, $"An error occurred:{ex.Message}");
         }
+    }
+
+    [HttpPost("UpdateTreatmentStatus")]
+    [Authorize]
+    public async Task<IActionResult> UpdateTreatmentStatus([FromBody] UpdateTreatmentStatusDto updateTreatmentStatusDto)
+    {
+        int currentUserId = 0;
+        try
+        {
+            var claimUserId = User.Claims.First(claim => claim.Type == "userId").Value;
+            currentUserId = Convert.ToInt32(claimUserId);
+
+            var user = await _context.Users
+                .Where(u => u.IdUser == currentUserId)
+                .ToListAsync();
+            if (!(user.Count == 1 && user[0].IsDoctor))
+                return BadRequest(new { Message = "The user is not a doctor." });
+        }
+        catch
+        {
+            return BadRequest(new { Message = "No user id was found, check the token." });
+        }
+
+        var treatment = _context.Treatments.Where(t => t.IdTreatment == updateTreatmentStatusDto.IdTreatment).FirstOrDefault();
+        
+        if (treatment == null)
+            return StatusCode(404);
+
+        if (treatment.DoctorID != currentUserId)
+            return StatusCode(401);
+
+        treatment.StatusTreatment = updateTreatmentStatusDto.Status;
+
+        try
+        {
+            _context.Treatments.Update(treatment);
+            await _context.SaveChangesAsync();
+        }
+        catch
+        {
+            return BadRequest();
+        }
+
+        return StatusCode(200);
     }
 }

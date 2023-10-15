@@ -51,7 +51,7 @@ namespace MedTracker
             modelBuilder.Entity<Treatment>()
             .Property(t => t.TName);
             modelBuilder.Entity<Treatment>()
-            .Property(t => t.Note);
+            .Property(t => t.NoteDoctor);
             // corect
             modelBuilder.Entity<Treatment>()
                 .HasOne(user => user.Doctor)
