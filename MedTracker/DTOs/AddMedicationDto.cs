@@ -1,6 +1,6 @@
 ﻿namespace MedTracker.DTOs
 {
-    public class AddMedicationDbo
+    public class AddMedicationDto
     {
         public int IdTreatment {  get; set; }
         public string PName { get; set; }
