@@ -141,6 +141,7 @@ public class DoctorController : ControllerBase
             return StatusCode(401);
 
         treatment.StatusTreatment = updateTreatmentStatusDto.Status;
+        treatment.NoteDoctor = updateTreatmentStatusDto.Note;
 
         try
         {
