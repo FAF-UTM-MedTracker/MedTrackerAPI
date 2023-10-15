@@ -54,6 +54,7 @@ public class DoctorController : ControllerBase
                    t.Start_Time,
                    t.End_Time,
                    t.NotePatient,
+                   t.NoteDoctor,
                    t.DoctorID,
                })
                .ToListAsync();
@@ -96,6 +97,7 @@ public class DoctorController : ControllerBase
                     t.Start_Time,
                     t.End_Time,
                     t.NotePatient,
+                    t.NoteDoctor,
                     t.DoctorID,
                     Medications = meds.ToList()
                 })
