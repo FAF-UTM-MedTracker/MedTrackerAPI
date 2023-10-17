@@ -43,27 +43,38 @@ public class DoctorController : ControllerBase
 
         try
         {
-           // Fetch treatments associated with the current patient
-           var treatments = await _context.Treatments
-               .Where(t => t.DoctorID == currentUserId)
-               .Select(t => new
-               {
-                   t.IdTreatment,
-                   t.TName,
-                   t.StatusTreatment,
-                   t.Start_Time,
-                   t.End_Time,
-                   t.NotePatient,
-                   t.NoteDoctor,
-                   t.DoctorID,
-               })
-               .ToListAsync();
+            var treatments = await _context.Treatments
+                .Where(t => t.DoctorID == currentUserId)
+                .Select(t => new
+                {
+                    t.IdTreatment,
+                    t.TName,
+                    t.StatusTreatment,
+                    t.Start_Time,
+                    t.End_Time,
+                    t.NotePatient,
+                    t.NoteDoctor,
+                    t.DoctorID,
+                })
+                .ToListAsync();
 
-            var treatmentsIds = new List<int>();
-            foreach (var treatment in treatments)
-            {
-                treatmentsIds.Add(treatment.IdTreatment);
-            }
+            var treatmentsIds = treatments.Select(t => t.IdTreatment).ToList();
+            
+            var patients = await _context.Patient_Treatment
+                .Where(tm => treatmentsIds.Contains(tm.IdTreatment))
+                .Join(
+                    _context.Patients,
+                    tm => tm.IdUser,
+                    p => p.IdUser,
+                    (tm, p) => new
+                    {
+                        tm.IdTreatment,
+                        p.IdUser,
+                        p.FirstName,
+                        p.LastName,
+                        p.PhoneNumber
+                    })
+                .ToListAsync();
 
             var medications = await _context.Treatment_Medication
                 .Where(tm => treatmentsIds.Contains(tm.IdTreatment))
@@ -84,30 +95,36 @@ public class DoctorController : ControllerBase
                     })
                 .ToListAsync();
 
-            var treatmentsWithMedications = treatments
-            .GroupJoin(
-                medications,
-                t => t.IdTreatment,
-                m => m.IdTreatment,
-                (t, meds) => new
-                {
-                    t.IdTreatment,
-                    t.TName,
-                    t.StatusTreatment,
-                    t.Start_Time,
-                    t.End_Time,
-                    t.NotePatient,
-                    t.NoteDoctor,
-                    t.DoctorID,
-                    Medications = meds.ToList()
-                })
-            .ToList();
+            var treatmentsWithPatientsAndMedications = new List<object>();
 
-            return Ok(treatmentsWithMedications);
+            foreach (var treatment in treatments)
+            {
+                var treatmentId = treatment.IdTreatment;
+                var patient = patients.FirstOrDefault(p => p.IdTreatment == treatmentId);
+                var meds = medications.Where(m => m.IdTreatment == treatmentId).ToList();
+
+                var treatmentWithPatientAndMedications = new
+                {
+                    treatment.IdTreatment,
+                    treatment.TName,
+                    treatment.StatusTreatment,
+                    treatment.Start_Time,
+                    treatment.End_Time,
+                    treatment.NotePatient,
+                    treatment.NoteDoctor,
+                    treatment.DoctorID,
+                    Patient = patient,
+                    Medications = meds
+                };
+
+                treatmentsWithPatientsAndMedications.Add(treatmentWithPatientAndMedications);
+            }
+
+            return Ok(treatmentsWithPatientsAndMedications);
         }
         catch (Exception ex)
         {
-            return StatusCode(500, $"An error occurred:{ex.Message}");
+            return StatusCode(500, $"An error occurred: {ex.Message}");
         }
     }
 
