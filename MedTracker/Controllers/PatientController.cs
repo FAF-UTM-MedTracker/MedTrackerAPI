@@ -117,6 +117,31 @@ public class PatientController : ControllerBase
 
     }
 
+    [HttpGet("GetDoctors")]
+    public async Task<IActionResult> GetDoctors()
+    {
+        try
+        {
+            // Fetch doctors and their information
+            var doctors = await _context.Doctors
+                .Select(d => new
+                {   
+                    DocID = d.IdUser,
+                    FName = d.FirstName,
+                    LName = d.LastName,
+                    Email = d.User.Email,
+                    PhoneNumber = d.PhoneNumber
+                })
+                .ToListAsync();
+
+            return Ok(doctors);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"An error occurred: {ex.Message}");
+        }
+    }
+
     [HttpPost("AddTreatment")]
     public async Task<IActionResult> AddTreatment([FromBody] TreatmentCreateDto treatmentDto)
     {
