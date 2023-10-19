@@ -19,6 +19,7 @@ public class DoctorController : ControllerBase
     {
         _context = context;
     }
+
     [HttpGet("GetTreatments")]
     [Authorize]
     public async Task<IActionResult> GetTreatments()
@@ -109,9 +110,10 @@ public class DoctorController : ControllerBase
             return StatusCode(500, $"An error occurred:{ex.Message}");
         }
     }
-    [HttpGet("GetPatient")]
+
+    [HttpGet("GetPatients")]
     [Authorize]
-    public async Task<IActionResult> GetPateint()
+    public async Task<IActionResult> GetPatients()
     {
         int currentUserId = 0;
         try

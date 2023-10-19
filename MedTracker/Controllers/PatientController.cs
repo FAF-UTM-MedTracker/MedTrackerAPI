@@ -118,6 +118,7 @@ public class PatientController : ControllerBase
     }
 
     [HttpGet("GetDoctors")]
+    [Authorize]
     public async Task<IActionResult> GetDoctors()
     {
         try
@@ -126,9 +127,9 @@ public class PatientController : ControllerBase
             var doctors = await _context.Doctors
                 .Select(d => new
                 {   
-                    DocID = d.IdUser,
-                    FName = d.FirstName,
-                    LName = d.LastName,
+                    DoctorId = d.IdUser,
+                    FirstName = d.FirstName,
+                    LastName = d.LastName,
                     Email = d.User.Email,
                     PhoneNumber = d.PhoneNumber
                 })
