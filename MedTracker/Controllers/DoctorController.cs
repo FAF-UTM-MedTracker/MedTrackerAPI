@@ -163,25 +163,26 @@ public class DoctorController : ControllerBase
                 .ToListAsync();
 
 
-            var treatmentsWithPatients = new List<object>();
+            var patientsWithTreatments = new List<object>();
 
             foreach (var treatment in treatments)
             {
                 var treatmentId = treatment.IdTreatment;
                 var patient = patients.FirstOrDefault(p => p.IdTreatment == treatmentId);
 
-                var treatmentWithPatient = new
+                var patientWithTreatment = new
                 {
+                    Patient = patient,
                     treatment.IdTreatment,
                     treatment.TName,
-                    treatment.DoctorID,
-                    Patient = patient
+                    treatment.DoctorID
+                    
                 };
 
-                treatmentsWithPatients.Add(treatmentWithPatient);
+                patientsWithTreatments.Add(patientWithTreatment);
             }
 
-            return Ok(treatmentsWithPatients);
+            return Ok(patientsWithTreatments);
         }
         catch (Exception ex)
         {
