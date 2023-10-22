@@ -139,7 +139,6 @@ public class DoctorController : ControllerBase
                 .Select(t => new
                 {
                     t.IdTreatment,
-                    t.TName,
                     t.DoctorID,
                 })
                 .ToListAsync();
@@ -154,7 +153,6 @@ public class DoctorController : ControllerBase
                     p => p.IdUser,
                     (tm, p) => new
                     {
-                        tm.IdTreatment,
                         p.IdUser,
                         p.FirstName,
                         p.LastName,
@@ -162,25 +160,61 @@ public class DoctorController : ControllerBase
                     })
                 .ToListAsync();
 
+            return Ok(patients);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"An error occurred: {ex.Message}");
+        }
+    }
 
-            var patientsWithTreatments = new List<object>();
+    [HttpGet("GetPatientTreatments")]
+    [Authorize]
+    public async Task<IActionResult> GetPatientTreatments()
+    {
+        int currentUserId = 0;
+        try
+        {
+            var claimUserId = User.Claims.First(claim => claim.Type == "userId").Value;
+            currentUserId = Convert.ToInt32(claimUserId);
 
-            foreach (var treatment in treatments)
-            {
-                var treatmentId = treatment.IdTreatment;
-                var patient = patients.FirstOrDefault(p => p.IdTreatment == treatmentId);
+            var user = await _context.Users
+                .Where(u => u.IdUser == currentUserId)
+                .ToListAsync();
+            if (!(user.Count == 1 && user[0].IsDoctor))
+                return BadRequest(new { Message = "The user is not a doctor." });
+        }
+        catch
+        {
+            return BadRequest(new { Message = "No user id was found, check the token." });
+        }
 
-                var patientWithTreatment = new
+        try
+        {
+            var treatments = await _context.Treatments
+                .Where(t => t.DoctorID == currentUserId)
+                .Select(t => new
                 {
-                    Patient = patient,
-                    treatment.IdTreatment,
-                    treatment.TName,
-                    treatment.DoctorID
-                    
-                };
+                    t.IdTreatment,
+                    t.TName,
+                    t.DoctorID,
+                })
+                .ToListAsync();
 
-                patientsWithTreatments.Add(patientWithTreatment);
-            }
+            var treatmentsIds = treatments.Select(t => t.IdTreatment).ToList();
+            
+            var patientsWithTreatments = await _context.Patient_Treatment
+                .Where(tm => treatmentsIds.Contains(tm.IdTreatment))
+                .Join(
+                    _context.Patients,
+                    tm => tm.IdUser,
+                    p => p.IdUser,
+                    (tm, p) => new
+                    {
+                        tm.IdTreatment,
+                        p.IdUser
+                    })
+                .ToListAsync();
 
             return Ok(patientsWithTreatments);
         }
