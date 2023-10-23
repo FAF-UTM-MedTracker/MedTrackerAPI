@@ -111,6 +111,119 @@ public class DoctorController : ControllerBase
         }
     }
 
+    [HttpGet("GetPatients")]
+    [Authorize]
+    public async Task<IActionResult> GetPatients()
+    {
+        int currentUserId = 0;
+        try
+        {
+            var claimUserId = User.Claims.First(claim => claim.Type == "userId").Value;
+            currentUserId = Convert.ToInt32(claimUserId);
+
+            var user = await _context.Users
+                .Where(u => u.IdUser == currentUserId)
+                .ToListAsync();
+            if (!(user.Count == 1 && user[0].IsDoctor))
+                return BadRequest(new { Message = "The user is not a doctor." });
+        }
+        catch
+        {
+            return BadRequest(new { Message = "No user id was found, check the token." });
+        }
+
+        try
+        {
+            var treatments = await _context.Treatments
+                .Where(t => t.DoctorID == currentUserId)
+                .Select(t => new
+                {
+                    t.IdTreatment,
+                    t.DoctorID,
+                })
+                .ToListAsync();
+
+            var treatmentsIds = treatments.Select(t => t.IdTreatment).ToList();
+            
+            var patients = await _context.Patient_Treatment
+                .Where(tm => treatmentsIds.Contains(tm.IdTreatment))
+                .Join(
+                    _context.Patients,
+                    tm => tm.IdUser,
+                    p => p.IdUser,
+                    (tm, p) => new
+                    {
+                        p.IdUser,
+                        p.FirstName,
+                        p.LastName,
+                        p.PhoneNumber
+                    })
+                .ToListAsync();
+
+            return Ok(patients);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"An error occurred: {ex.Message}");
+        }
+    }
+
+    [HttpGet("GetPatientTreatments")]
+    [Authorize]
+    public async Task<IActionResult> GetPatientTreatments()
+    {
+        int currentUserId = 0;
+        try
+        {
+            var claimUserId = User.Claims.First(claim => claim.Type == "userId").Value;
+            currentUserId = Convert.ToInt32(claimUserId);
+
+            var user = await _context.Users
+                .Where(u => u.IdUser == currentUserId)
+                .ToListAsync();
+            if (!(user.Count == 1 && user[0].IsDoctor))
+                return BadRequest(new { Message = "The user is not a doctor." });
+        }
+        catch
+        {
+            return BadRequest(new { Message = "No user id was found, check the token." });
+        }
+
+        try
+        {
+            var treatments = await _context.Treatments
+                .Where(t => t.DoctorID == currentUserId)
+                .Select(t => new
+                {
+                    t.IdTreatment,
+                    t.TName,
+                    t.DoctorID,
+                })
+                .ToListAsync();
+
+            var treatmentsIds = treatments.Select(t => t.IdTreatment).ToList();
+            
+            var patientsWithTreatments = await _context.Patient_Treatment
+                .Where(tm => treatmentsIds.Contains(tm.IdTreatment))
+                .Join(
+                    _context.Patients,
+                    tm => tm.IdUser,
+                    p => p.IdUser,
+                    (tm, p) => new
+                    {
+                        tm.IdTreatment,
+                        p.IdUser
+                    })
+                .ToListAsync();
+
+            return Ok(patientsWithTreatments);
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, $"An error occurred: {ex.Message}");
+        }
+    }
+
     [HttpPost("UpdateTreatmentStatus")]
     [Authorize]
     public async Task<IActionResult> UpdateTreatmentStatus([FromBody] UpdateTreatmentStatusDto updateTreatmentStatusDto)
