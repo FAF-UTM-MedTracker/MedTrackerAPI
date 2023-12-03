@@ -7,6 +7,7 @@ namespace MedTracker.Models
         [Key]
         public int IdUser { get; set; }
         public string Email { get; set; }
+        public string? Salt { get; set; }
         public string UPassword { get; set; }
         public bool IsDoctor { get; set; }  
 

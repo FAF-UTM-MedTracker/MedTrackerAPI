@@ -39,10 +39,13 @@ namespace MedTracker.Services
                 }
 
                 // Create a new user entity and save it to the database
+                var generatedSalt = BCrypt.Net.BCrypt.GenerateSalt();
+                var hashedSaltAndPass = BCrypt.Net.BCrypt.HashPassword(generatedSalt + requestDto.UPassword, generatedSalt);
                 var user = new User
                 {
                     Email = requestDto.Email,
-                    UPassword = requestDto.UPassword, // Note: You should hash and salt the password before storing it
+                    Salt = generatedSalt,
+                    UPassword = hashedSaltAndPass,
                     IsDoctor = requestDto.IsDoctor // Assuming your DTO has a Doctor property
                 };
                 var doctor = new Doctor
@@ -90,12 +93,13 @@ namespace MedTracker.Services
                 }
 
                 // Create a new user entity and save it to the database
-                //var hashedPassword = BCrypt.Net.BCrypt.HashPassword(requestDto.UPassword);
-                var hashedPassword = requestDto.UPassword;
+                var generatedSalt = BCrypt.Net.BCrypt.GenerateSalt();
+                var hashedSaltAndPass = BCrypt.Net.BCrypt.HashPassword(generatedSalt + requestDto.UPassword, generatedSalt);
                 var user = new User
                 {
                     Email = requestDto.Email,
-                    UPassword = hashedPassword,
+                    Salt = generatedSalt,
+                    UPassword = hashedSaltAndPass,
                 };
                 var patient = new Patient
                 {
@@ -139,12 +143,19 @@ namespace MedTracker.Services
                 if (user == null)
                     return null;
 
-                //var hashedPassword = BCrypt.Net.BCrypt.HashPassword(requestDto.UPassword);
-                var hashedPassword = requestDto.UPassword;
-                if (user.UPassword == hashedPassword)
-                    return GenerateJwt(user.IdUser);
+                if (user.Salt.IsNullOrEmpty())
+                {
+                    if (user.UPassword == requestDto.UPassword)
+                        return GenerateJwt(user.IdUser);
+                }
                 else
-                    return null;
+                {
+                    var hashedSaltAndPassword = BCrypt.Net.BCrypt.HashPassword(user.Salt + requestDto.UPassword, user.Salt);
+                    if (user.UPassword == hashedSaltAndPassword)
+                        return GenerateJwt(user.IdUser);
+                }
+
+                return null;
             }
             catch (Exception ex)
             {
