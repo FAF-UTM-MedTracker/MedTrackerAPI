@@ -1,0 +1,6 @@
+{
+  "certificateSettings": {
+    "certificatePath": "cert/exported-api-cert.pfx",
+    "passwordPath": "cert/pfx-password.key"
+  }
+}
