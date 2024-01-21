@@ -139,30 +139,20 @@ namespace MedTracker.Services
             {
                 // Find the user by email
                 var user = _dbContext.Users.First(u => u.Email == requestDto.Email);
-
-                if (user == null)
-                    return null;
-
-                if (user.Salt.IsNullOrEmpty())
-                {
-                    if (user.UPassword == requestDto.UPassword)
-                        return GenerateJwt(user.IdUser);
-                }
-                else
+                if (user != null)
                 {
                     var hashedSaltAndPassword = BCrypt.Net.BCrypt.HashPassword(user.Salt + requestDto.UPassword, user.Salt);
                     if (user.UPassword == hashedSaltAndPassword)
                         return GenerateJwt(user.IdUser);
                 }
-
-                return null;
             }
             catch (Exception ex)
             {
                 // Log the error
                 Console.WriteLine($"An error occurred during login: {ex.Message}");
-                return null;
             }
+
+            return null;
         }
 
         static string GenerateJwt(int userId)
