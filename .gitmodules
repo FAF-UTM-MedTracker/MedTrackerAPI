@@ -1,0 +1,3 @@
+[submodule "MedTracker/certificates"]
+	path = MedTracker/certificates
+	url = https://github.com/FAF-UTM-MedTracker/api-certificate.git
